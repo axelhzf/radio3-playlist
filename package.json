@@ -1,0 +1,21 @@
+{
+  "name": "radio3-playlist",
+  "version": "1.0.0",
+  "description": "create playlist from radio3 programs",
+  "main": "src/index.js",
+  "repository": "http://github.com/axelhzf/radio3-playlist",
+  "author": "Axel Hernández Ferrera",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@types/jest": "^23.3.2",
+    "jest": "^23.6.0",
+    "prettier": "^1.14.3",
+    "ts-jest": "^23.10.2",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.1"
+  },
+  "dependencies": {
+    "rss-parser": "^3.4.3"
+  }
+}
