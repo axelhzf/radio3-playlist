@@ -8,6 +8,9 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@types/capitalize": "^1.0.1",
+    "@types/dotenv": "^4.0.3",
+    "@types/he": "^1.1.0",
     "@types/jest": "^23.3.2",
     "jest": "^23.6.0",
     "prettier": "^1.14.3",
@@ -16,6 +19,11 @@
     "typescript": "^3.1.1"
   },
   "dependencies": {
-    "rss-parser": "^3.4.3"
+    "capitalize": "^2.0.0",
+    "date-fns": "^1.29.0",
+    "dotenv": "^6.0.0",
+    "he": "^1.2.0",
+    "rss-parser": "^3.4.3",
+    "spotify-web-api-node": "^4.0.0"
   }
 }
