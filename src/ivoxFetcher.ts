@@ -1,6 +1,7 @@
 import Parser from 'rss-parser';
 import * as he from 'he';
 import * as capitalize from 'capitalize';
+import sanitizeHtml from 'sanitize-html';
 
 export async function fetchEpisodes(programFeedUrl: string): Promise<Episode[]> {
   const parser = new Parser();
@@ -20,15 +21,19 @@ export async function fetchEpisodes(programFeedUrl: string): Promise<Episode[]> 
 
 export function extractPlaylistFromContent(content: string): Playlist {
   const decoded = he.decode(content);
-  const trackRegex = /([A-Z -]*) - (.*?)((?=(\\n|\\r)*,?[\sA-Z]+-)|(?=\.?(\\n|\\r)*Escuchar audio))/g;
-  let trackMatch = trackRegex.exec(decoded);
+  const sanitized = sanitizeHtml(decoded, { allowedTags: []});
+
+  const trackRegex = /(.*?) - (.*)/g;
+  let trackMatch = trackRegex.exec(sanitized);
+
+
   const playlist: Playlist = [];
   while (trackMatch != null) {
     playlist.push({
       artist: capitalize.words(trackMatch[1].trim()),
       title: trackMatch[2].trim()
     });
-    trackMatch = trackRegex.exec(decoded);
+    trackMatch = trackRegex.exec(sanitized);
   }
   return playlist;
 }
