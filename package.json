@@ -43,6 +43,7 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "rss-parser": "^3.9.0",
-    "spotify-web-api-node": "^4.0.0"
+    "spotify-web-api-node": "^4.0.0",
+    "swr": "^0.3.2"
   }
 }

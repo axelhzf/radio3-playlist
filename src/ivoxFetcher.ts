@@ -9,7 +9,7 @@ export async function fetchEpisodes(programFeedUrl: string): Promise<Episode[]> 
   const episodes = feed.items.map(item => {
     const episode: Episode = {
       title: item.title,
-      pubDate: new Date(item.pubDate),
+      pubDate: item.pubDate,
       content: he.decode(item.content),
       audio: item.enclosure.url,
       playlist: extractPlaylistFromContent(item.content)
@@ -38,7 +38,7 @@ export function extractPlaylistFromContent(content: string): Playlist {
   return playlist;
 }
 
-type Episode = {
+export type Episode = {
   title: string;
   pubDate: Date;
   content: string;
