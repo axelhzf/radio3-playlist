@@ -73,20 +73,8 @@ app.get('/podcast-to-playlist', async (req, res) => {
 });
 
 app.get('/spotify/auth', async (req, res) => {
-  const code = req.query.code;
-  if (!code) {
-    res.send('Invalid code');
-    return;
-  }
-  try {
-    const spotify = new Spotify();
-    const { accessToken, refreshToken } = await spotify.getToken(code);
-    res.cookie('accessToken', accessToken);
-    res.cookie('refreshToken', refreshToken);
-    res.redirect('/');
-  } catch (e) {
-    res.send(e);
-  }
+
+
 });
 
 app.listen(port, () => console.log(`Spotify auth server running on http://localhost:${port}`));
