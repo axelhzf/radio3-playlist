@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { PodcastWithEpisodes } from '../index';
 import { flatMap } from 'lodash';
 import { parse } from 'cookie';
-import { Spotify } from '../../src/spotify';
+import { Spotify } from '../../services/spotify';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   res.setHeader('Content-Type', 'application/json');

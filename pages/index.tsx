@@ -1,8 +1,8 @@
 import { GetServerSideProps } from 'next';
 import { parse, serialize } from 'cookie';
-import { Spotify } from '../src/spotify';
+import { Spotify } from '../services/spotify';
 import { Layout } from '../components/Layout';
-import { Episode, fetchEpisodes } from '../src/ivoxFetcher';
+import { Episode, fetchEpisodes } from '../services/ivoxFetcher';
 import { useState } from 'react';
 
 export type PodcastWithEpisodes = {

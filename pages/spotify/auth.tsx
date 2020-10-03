@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
-import { Spotify } from '../../src/spotify';
+import { Spotify } from '../../services/spotify';
 import { isArray } from 'lodash';
 import { ParsedUrlQuery } from 'querystring';
 import { serialize } from 'cookie';
@@ -31,7 +31,9 @@ function getParam(query: ParsedUrlQuery, key: string): string | undefined {
   return isArray(val) ? val[0] : val;
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async context => {
+export const getServerSideProps: GetServerSideProps<Props> = async (
+  context
+) => {
   const code = getParam(context.query, 'code');
   if (!code) {
     return { props: { error: 'Invalid code ' } };
@@ -40,13 +42,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async context => {
     const spotify = new Spotify();
     const { accessToken, refreshToken } = await spotify.getToken(code);
 
-    context.res.setHeader(
-      'Set-Cookie',
-      [
-        serialize('accessToken', accessToken, { maxAge: 10 * 60, path: '/' }),
-        serialize('refreshToken', refreshToken, { maxAge: 10 * 60, path: '/' })
-      ]
-    );
+    context.res.setHeader('Set-Cookie', [
+      serialize('accessToken', accessToken, { maxAge: 10 * 60, path: '/' }),
+      serialize('refreshToken', refreshToken, { maxAge: 10 * 60, path: '/' }),
+    ]);
   } catch (e) {
     return { props: { error: e.message } };
   }
