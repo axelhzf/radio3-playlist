@@ -21,7 +21,7 @@ export async function createPlaylistFromPodcast(
     console.log(`🎙  ${playlistName}`);
 
     for (const track of episodePlaylist) {
-      const spotifyTracks = await spotify.searchTracks(
+      const spotifyTracks = await spotify.searchTrack(
         track.artist,
         track.title
       );
