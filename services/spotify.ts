@@ -19,7 +19,9 @@ export class Spotify {
     const credentials = {
       clientId: process.env.SPOTIFY_CLIENT_ID,
       clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-      redirectUri: 'http://localhost:3000/spotify/auth',
+      redirectUri:
+        process.env.SPOTIFY_REDIRECT_URL ??
+        'http://localhost:3000/spotify/auth',
     };
     this.scopes = [
       'user-read-private',
