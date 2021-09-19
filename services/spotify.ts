@@ -45,7 +45,9 @@ export class Spotify {
     const data = await this.spotifyApi.authorizationCodeGrant(code);
     const accessToken = data.body['access_token'];
     const refreshToken = data.body['refresh_token'];
-    return { accessToken, refreshToken };
+    const expiresIn = data.body['expires_in'];
+
+    return { accessToken, refreshToken, expiresIn };
   }
 
   async getUserPlaylists(): Promise<PlaylistObjectSimplified[]> {

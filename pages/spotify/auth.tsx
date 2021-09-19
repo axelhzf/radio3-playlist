@@ -40,11 +40,10 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
   }
   try {
     const spotify = new Spotify();
-    const { accessToken, refreshToken } = await spotify.getToken(code);
-
+    const { accessToken, refreshToken, expiresIn } = await spotify.getToken(code);
     context.res.setHeader('Set-Cookie', [
-      serialize('accessToken', accessToken, { maxAge: 10 * 60, path: '/' }),
-      serialize('refreshToken', refreshToken, { maxAge: 10 * 60, path: '/' }),
+      serialize('accessToken', accessToken, { maxAge: expiresIn, path: '/' }),
+      serialize('refreshToken', refreshToken, { maxAge: 0, path: '/' }),
     ]);
   } catch (e) {
     return { props: { error: e.message } };
