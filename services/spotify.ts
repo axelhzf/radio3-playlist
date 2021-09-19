@@ -31,9 +31,23 @@ export class Spotify {
     this.spotifyApi = new SpotifyWebApi(credentials);
   }
 
-  auth(accessToken: string, refreshToken: string) {
-    this.spotifyApi.setAccessToken(accessToken);
-    this.spotifyApi.setRefreshToken(refreshToken);
+  setAccessToken(accessToken: string) {
+    return this.spotifyApi.setAccessToken(accessToken);
+  }
+
+  setRefreshToken(refreshToken: string) {
+    return this.spotifyApi.setRefreshToken(refreshToken);
+  }
+
+  isAuthenticated() {
+    return this.spotifyApi.getAccessToken() !== undefined;
+  }
+
+  async refreshAccessToken() {
+    const { body } = await this.spotifyApi.refreshAccessToken();
+    const accessToken = body.access_token;
+    const expiresIn = body.expires_in;
+    return { accessToken, expiresIn }
   }
 
   getAuthorizeUrl() {

@@ -1,9 +1,8 @@
 import { GetServerSideProps } from 'next';
-import { parse, serialize } from 'cookie';
-import { Spotify } from '../services/spotify';
 import { Layout } from '../components/Layout';
 import { Episode, fetchEpisodes } from '../services/ivoxFetcher';
 import { useState } from 'react';
+import { getSpotifyFromRequest } from '../services/getSpotifyFromRequest';
 
 export type PodcastWithEpisodes = {
   name: string;
@@ -117,23 +116,13 @@ function EpisodeTracks(props: { podcastName: string; episode: Episode }) {
 export const getServerSideProps: GetServerSideProps<Props> = async (
   context
 ) => {
-  const cookies = parse((context.req.headers.cookie as string) ?? '');
-  const accessToken = cookies.accessToken ?? null;
-  const refreshToken = cookies.refreshToken ?? null;
-
-  const spotify = new Spotify();
+  const spotify = await getSpotifyFromRequest(context.req, context.res);
   let me: SpotifyApi.CurrentUsersProfileResponse | null = null;
-  if (accessToken && refreshToken) {
-    try {
-      spotify.auth(accessToken, refreshToken);
-      me = await spotify.getMe();
-    } catch (e) {
-      context.res.setHeader('Set-Cookie', [
-        serialize('accessToken', '', { maxAge: -1, path: '/' }),
-        serialize('refreshToken', '', { maxAge: -1, path: '/' }),
-      ]);
-    }
+
+  if (spotify.isAuthenticated()) {
+    me = await spotify.getMe();
   }
+
   const podcasts = [
     {
       name: 'Turbo3',
@@ -155,7 +144,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
     })
   );
 
-  const authUrl = await spotify.getAuthorizeUrl();
+  let authUrl = spotify.getAuthorizeUrl();
 
   return { props: { me, authUrl, podcastWithEpisodes } };
 };
