@@ -1,0 +1,13 @@
+name: add last episode cron
+on:
+  schedule:
+    - cron: '* 9 * * *'
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add last episode
+        run: |
+          curl --request GET \
+          --url 'https://radio3.axelhzf.com/api/add-last-episode' \
+          --cookie 'refreshToken=${{ secrets.REFRESH_TOKEN }}'
