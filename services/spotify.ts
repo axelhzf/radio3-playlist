@@ -1,5 +1,5 @@
 import SpotifyWebApi from 'spotify-web-api-node';
-import { difference } from 'lodash';
+import { difference, chunk } from 'lodash';
 import pAll from 'p-all';
 
 type PlaylistObjectSimplified = SpotifyApi.PlaylistObjectSimplified;
@@ -21,12 +21,12 @@ export class Spotify {
       clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
       redirectUri:
         process.env.SPOTIFY_REDIRECT_URL ??
-        'http://localhost:3000/spotify/auth',
+        'http://localhost:3000/spotify/auth'
     };
     this.scopes = [
       'user-read-private',
       'user-read-email',
-      'playlist-modify-public',
+      'playlist-modify-public'
     ];
     this.spotifyApi = new SpotifyWebApi(credentials);
   }
@@ -47,7 +47,7 @@ export class Spotify {
     const { body } = await this.spotifyApi.refreshAccessToken();
     const accessToken = body.access_token;
     const expiresIn = body.expires_in;
-    return { accessToken, expiresIn }
+    return { accessToken, expiresIn };
   }
 
   getAuthorizeUrl() {
@@ -112,7 +112,7 @@ export class Spotify {
       console.log(`👷 Adding ${trackUris.length} to the playlist`);
 
       await this.spotifyApi.addTracksToPlaylist(playlistId, trackUris, {
-        position: 0,
+        position: 0
       });
     } else {
       console.log('Searching current playlist tracks to avoid duplicates');
@@ -120,13 +120,22 @@ export class Spotify {
         playlist.id
       );
       const existingUris = currentPlaylistTracks.map((t) => t.track.uri);
-      const newUris = difference(trackUris, existingUris);
 
-      console.log(`👷 Adding ${newUris.length} to the playlist`);
+      const preservedUris = difference(existingUris, trackUris).slice(0, 50 - trackUris.length);
+      const toRemoveUris = difference(existingUris, preservedUris);
 
-      if (newUris.length > 0) {
-        await this.spotifyApi.addTracksToPlaylist(playlist.id, newUris, {
-          position: 0,
+      if (toRemoveUris.length > 0) {
+        console.log(`👷 Removing ${toRemoveUris.length} from the playlist`);
+
+        for (const c of chunk(toRemoveUris, 20)) {
+          await this.spotifyApi.removeTracksFromPlaylist(playlist.id, c.map(uri =>({ uri })));
+        }
+      }
+
+      if (trackUris.length > 0) {
+        console.log(`👷 Adding ${trackUris.length} to the playlist`);
+        await this.spotifyApi.addTracksToPlaylist(playlist.id, trackUris, {
+          position: 0
         });
       }
     }
@@ -143,7 +152,7 @@ export class Spotify {
       console.log('add playlist tracks', currentOffset);
       const response = await this.spotifyApi.getPlaylistTracks(id, {
         limit,
-        offset: currentOffset,
+        offset: currentOffset
       });
       result = [...result, ...response.body.items];
       if (response.body.items.length === 0) hasMore = false;

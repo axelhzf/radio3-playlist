@@ -3,6 +3,7 @@ import { Layout } from '../components/Layout';
 import { Episode, fetchEpisodes } from '../services/ivoxFetcher';
 import { useState } from 'react';
 import { getSpotifyFromRequest } from '../services/getSpotifyFromRequest';
+import { podcasts } from '../services/podcasts';
 
 export type PodcastWithEpisodes = {
   name: string;
@@ -123,20 +124,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async (
     me = await spotify.getMe();
   }
 
-  const podcasts = [
-    {
-      name: 'Turbo3',
-      rss: 'https://www.ivoox.com/turbo-3_fg_f157926_filtro_1.xml',
-    },
-    {
-      name: 'Na na na',
-      rss: 'https://www.ivoox.com/na-na-na_fg_f1128042_filtro_1.xml',
-    },
-    {
-      name: '180 grados',
-      rss: 'http://api.rtve.es/api/programas/22270/audios.rss',
-    },
-  ];
   const podcastWithEpisodes: PodcastWithEpisodes[] = await Promise.all(
     podcasts.map(async (podcast) => {
       const episodes = await fetchEpisodes(podcast.rss);
