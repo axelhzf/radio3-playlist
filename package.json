@@ -50,6 +50,9 @@
     "spotify-web-api-node": "^5.0.2",
     "swr": "^0.3.2"
   },
+  "engines": {
+    "node": ">=16"
+  },
   "jest": {
     "transform": {
       "^.+\\.tsx?$": "esbuild-jest"
