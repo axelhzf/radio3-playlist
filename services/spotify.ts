@@ -119,7 +119,9 @@ export class Spotify {
       const currentPlaylistTracks = await this.getAllPlaylistTracks(
         playlist.id
       );
-      const existingUris = currentPlaylistTracks.map((t) => t.track.uri);
+      const existingUris = currentPlaylistTracks.flatMap((t) =>
+        t.track ? [t.track.uri] : []
+      );
 
       const preservedUris = difference(existingUris, trackUris).slice(
         0,
