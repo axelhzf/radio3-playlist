@@ -1,4 +1,3 @@
-import { NextApiRequest } from 'next';
 import { first } from 'lodash';
 import { getSpotifyFromRequest } from '../../../services/getSpotifyFromRequest';
 import { podcasts } from '../../../services/podcasts';
@@ -7,7 +6,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextApiRequest) {
+export async function GET() {
   const spotify = await getSpotifyFromRequest();
 
   if (!spotify.isAuthenticated()) {
