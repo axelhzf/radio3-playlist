@@ -75,14 +75,56 @@ export default {
     }
   },
 
-  // Optional: Handle HTTP requests for testing
+  // Handle HTTP requests - returns latest episodes with parsed tracks
   async fetch(
     request: Request,
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
-    return new Response('Radio3 Playlist Worker is running. Scheduled to run daily at 9 AM UTC.', {
-      headers: { 'Content-Type': 'text/plain' },
-    });
+    try {
+      const results = await Promise.all(
+        PODCASTS.map(async (podcast) => {
+          try {
+            const episodes = await fetchEpisodes(podcast.rss);
+            const latestEpisode = episodes.length > 0 ? episodes[0] : null;
+
+            return {
+              podcast: podcast.name,
+              rss: podcast.rss,
+              latestEpisode: latestEpisode
+                ? {
+                    title: latestEpisode.title,
+                    pubDate: latestEpisode.pubDate,
+                    audio: latestEpisode.audio,
+                    tracksCount: latestEpisode.playlist.length,
+                    tracks: latestEpisode.playlist,
+                  }
+                : null,
+            };
+          } catch (error) {
+            return {
+              podcast: podcast.name,
+              rss: podcast.rss,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              latestEpisode: null,
+            };
+          }
+        })
+      );
+
+      return new Response(JSON.stringify(results, null, 2), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
   },
 };

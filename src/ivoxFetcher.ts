@@ -1,4 +1,4 @@
-import Parser from 'rss-parser';
+import { XMLParser } from 'fast-xml-parser';
 import sanitizeHtml from 'sanitize-html';
 
 function capitalize(str: string): string {
@@ -27,19 +27,36 @@ function decodeHtml(html: string): string {
 export async function fetchEpisodes(
   programFeedUrl: string
 ): Promise<Episode[]> {
-  const parser = new Parser();
-  const feed = await parser.parseURL(programFeedUrl);
-  const episodes = feed.items?.map((item) => {
+  const response = await fetch(programFeedUrl);
+  const xmlText = await response.text();
+
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '@_',
+  });
+
+  const result = parser.parse(xmlText);
+  const channel = result.rss?.channel;
+
+  if (!channel) {
+    return [];
+  }
+
+  const items = Array.isArray(channel.item) ? channel.item : [channel.item].filter(Boolean);
+
+  const episodes = items.map((item: any) => {
+    const content = item.description || item['content:encoded'] || '';
     const episode: Episode = {
-      title: item.title ?? '',
-      pubDate: item.pubDate ?? '',
-      content: decodeHtml(item.content ?? ''),
-      audio: item.enclosure?.url ?? '',
-      playlist: extractPlaylistFromContent(item.content ?? ''),
+      title: item.title || '',
+      pubDate: item.pubDate || '',
+      content: typeof content === 'string' ? content : '',
+      audio: item.enclosure?.['@_url'] || '',
+      playlist: extractPlaylistFromContent(typeof content === 'string' ? content : ''),
     };
     return episode;
   });
-  return episodes ?? [];
+
+  return episodes;
 }
 
 export function extractPlaylistFromContent(content: string): Playlist {

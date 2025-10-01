@@ -26,7 +26,7 @@
     "wrangler": "^3.95.0"
   },
   "dependencies": {
-    "rss-parser": "^3.9.0",
+    "fast-xml-parser": "^5.2.5",
     "sanitize-html": "^2.13.1",
     "spotify-web-api-node": "^4.0.0"
   }
