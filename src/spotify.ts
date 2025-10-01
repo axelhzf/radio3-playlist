@@ -1,8 +1,4 @@
-import SpotifyWebApi from 'spotify-web-api-node';
-
-type PlaylistObjectSimplified = SpotifyApi.PlaylistObjectSimplified;
-type TrackObjectFull = SpotifyApi.TrackObjectFull;
-type PlaylistTrackObject = SpotifyApi.PlaylistTrackObject;
+import { SpotifyApi } from '@spotify/web-api-ts-sdk';
 
 export type TrackDescriptor = {
   artist: string;
@@ -10,7 +6,10 @@ export type TrackDescriptor = {
 };
 
 export class Spotify {
-  spotifyApi: SpotifyWebApi;
+  private sdk: SpotifyApi;
+  private clientId: string;
+  private clientSecret: string;
+  private redirectUri: string;
   scopes: string[];
 
   constructor(
@@ -18,51 +17,112 @@ export class Spotify {
     clientSecret: string,
     redirectUri?: string
   ) {
-    const credentials = {
-      clientId,
-      clientSecret,
-      redirectUri: redirectUri ?? 'http://localhost:3000/spotify/auth',
-    };
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.redirectUri = redirectUri ?? 'http://localhost:3000/spotify/auth';
     this.scopes = [
       'user-read-private',
       'user-read-email',
       'playlist-modify-public',
     ];
-    this.spotifyApi = new SpotifyWebApi(credentials);
+
+    // Initialize SDK with client credentials (will be replaced with proper auth)
+    this.sdk = SpotifyApi.withClientCredentials(clientId, clientSecret);
   }
 
   auth(accessToken: string, refreshToken: string) {
-    this.spotifyApi.setAccessToken(accessToken);
-    this.spotifyApi.setRefreshToken(refreshToken);
+    // Create SDK instance with user authorization
+    this.sdk = SpotifyApi.withAccessToken(this.clientId, {
+      access_token: accessToken,
+      token_type: 'Bearer',
+      expires_in: 3600,
+      refresh_token: refreshToken,
+    });
+  }
+
+  async refreshAccessToken(): Promise<string> {
+    console.log('🔄 Refreshing Spotify access token...');
+
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + btoa(`${this.clientId}:${this.clientSecret}`),
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: (this.sdk as any).getAccessToken().refresh_token,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to refresh token: ${response.statusText}`);
+    }
+
+    const data = await response.json() as { access_token: string; refresh_token?: string };
+
+    // Update SDK with new token
+    this.sdk = SpotifyApi.withAccessToken(this.clientId, {
+      access_token: data.access_token,
+      token_type: 'Bearer',
+      expires_in: 3600,
+      refresh_token: data.refresh_token || (this.sdk as any).getAccessToken().refresh_token,
+    });
+
+    console.log('✓ Access token refreshed successfully');
+    return data.access_token;
   }
 
   getAuthorizeUrl() {
-    return this.spotifyApi.createAuthorizeURL(this.scopes, 'fake_state');
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      response_type: 'code',
+      redirect_uri: this.redirectUri,
+      scope: this.scopes.join(' '),
+      state: 'fake_state',
+    });
+    return `https://accounts.spotify.com/authorize?${params.toString()}`;
   }
 
   async getToken(code: string) {
-    // Retrieve an access token and a refresh token
-    const data = await this.spotifyApi.authorizationCodeGrant(code);
-    const accessToken = data.body['access_token'];
-    const refreshToken = data.body['refresh_token'];
-    return { accessToken, refreshToken };
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + btoa(`${this.clientId}:${this.clientSecret}`),
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: this.redirectUri,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get token: ${response.statusText}`);
+    }
+
+    const data = await response.json() as { access_token: string; refresh_token: string };
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+    };
   }
 
-  async getUserPlaylists(): Promise<PlaylistObjectSimplified[]> {
-    const response = await this.spotifyApi.getUserPlaylists({ limit: 50 });
-    return response.body.items;
+  async getUserPlaylists() {
+    const playlists = await this.sdk.currentUser.playlists.playlists(50);
+    return playlists.items;
   }
 
-  async searchTrack(track: TrackDescriptor): Promise<TrackObjectFull[]> {
+  async searchTrack(track: TrackDescriptor) {
     console.log('Searching', track);
-    const response = await this.spotifyApi.searchTracks(
-      `track:${track.title} artist:${track.artist}`
-    );
-    return response.body.tracks?.items ?? [];
+    const query = `track:${track.title} artist:${track.artist}`;
+    const results = await this.sdk.search(query, ['track'], undefined, 1);
+    return results.tracks.items;
   }
 
-  async searchTracks(tracks: TrackDescriptor[]): Promise<TrackObjectFull[]> {
-    const foundTracks: TrackObjectFull[] = [];
+  async searchTracks(tracks: TrackDescriptor[]) {
+    const foundTracks: any[] = [];
 
     // Process tracks with basic concurrency control
     const batchSize = 10;
@@ -79,7 +139,7 @@ export class Spotify {
           }
         })
       );
-      foundTracks.push(...batchResults.filter((t) => t !== null) as TrackObjectFull[]);
+      foundTracks.push(...batchResults.filter((t) => t !== null));
     }
 
     return foundTracks;
@@ -90,8 +150,8 @@ export class Spotify {
     const currentUserId = me.id;
 
     console.log('Searching tracks on Spotify...');
-    const foundTracks: TrackObjectFull[] = await this.searchTracks(tracks);
-    const trackUris = foundTracks.map((track) => track.uri);
+    const foundTracks = await this.searchTracks(tracks);
+    const trackUris = foundTracks.map((track: any) => track.uri);
 
     console.log('Finding user playlists');
     const userPlaylists = await this.getUserPlaylists();
@@ -100,59 +160,53 @@ export class Spotify {
     );
 
     if (!playlist) {
-      const createPlaylistResponse = await this.spotifyApi.createPlaylist(
-        currentUserId,
-        playlistName
-      );
-      const playlistId = createPlaylistResponse.body.id;
-
-      console.log(`👷 Adding ${trackUris.length} to the playlist`);
-
-      await this.spotifyApi.addTracksToPlaylist(playlistId, trackUris, {
-        position: 0,
+      console.log(`Creating new playlist: ${playlistName}`);
+      const newPlaylist = await this.sdk.playlists.createPlaylist(currentUserId, {
+        name: playlistName,
+        public: true,
+        description: 'Auto-generated playlist from Radio3 podcast',
       });
+
+      console.log(`👷 Adding ${trackUris.length} tracks to the playlist`);
+
+      if (trackUris.length > 0) {
+        await this.sdk.playlists.addItemsToPlaylist(newPlaylist.id, trackUris);
+      }
     } else {
       console.log('Searching current playlist tracks to avoid duplicates');
-      const currentPlaylistTracks = await this.getAllPlaylistTracks(
-        playlist.id
-      );
-      const existingUris = currentPlaylistTracks.map((t) => t.track.uri);
-      const newUris = trackUris.filter((uri) => !existingUris.includes(uri));
+      const currentPlaylistTracks = await this.getAllPlaylistTracks(playlist.id);
+      const existingUris = currentPlaylistTracks.map((t: any) => t.track.uri);
+      const newUris = trackUris.filter((uri: string) => !existingUris.includes(uri));
 
       console.log(`👷 Adding ${newUris.length} new tracks to the playlist`);
 
       if (newUris.length > 0) {
-        await this.spotifyApi.addTracksToPlaylist(playlist.id, newUris, {
-          position: 0,
-        });
+        await this.sdk.playlists.addItemsToPlaylist(playlist.id, newUris);
       }
     }
   }
 
-  private async getAllPlaylistTracks(
-    id: string
-  ): Promise<PlaylistTrackObject[]> {
-    let result: PlaylistTrackObject[] = [];
+  private async getAllPlaylistTracks(id: string) {
+    let result: any[] = [];
+    let offset = 0;
     const limit = 50;
-    let currentOffset = 0;
     let hasMore = true;
-    do {
-      console.log('Fetching playlist tracks, offset:', currentOffset);
-      const response = await this.spotifyApi.getPlaylistTracks(id, {
-        limit,
-        offset: currentOffset,
-      });
-      result = [...result, ...response.body.items];
-      if (response.body.items.length === 0) hasMore = false;
-      if (result.length === response.body.total) hasMore = false;
 
-      currentOffset += limit;
+    do {
+      console.log('Fetching playlist tracks, offset:', offset);
+      const response = await this.sdk.playlists.getPlaylistItems(id, undefined, undefined, limit, offset);
+
+      result = [...result, ...response.items];
+      if (response.items.length === 0) hasMore = false;
+      if (result.length >= response.total) hasMore = false;
+
+      offset += limit;
     } while (hasMore);
+
     return result;
   }
 
   async getMe() {
-    const meResponse = await this.spotifyApi.getMe();
-    return meResponse.body;
+    return await this.sdk.currentUser.profile();
   }
 }

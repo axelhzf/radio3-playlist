@@ -14,20 +14,21 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "get-tokens": "node --env-file=.env --import tsx scripts/get-spotify-tokens.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
     "@types/sanitize-html": "^1.27.0",
-    "@types/spotify-web-api-node": "^4.0.1",
     "prettier": "^2.1.1",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^2.1.8",
-    "wrangler": "^3.95.0"
+    "wrangler": "^4.40.3"
   },
   "dependencies": {
+    "@spotify/web-api-ts-sdk": "^1.2.0",
     "fast-xml-parser": "^5.2.5",
-    "sanitize-html": "^2.13.1",
-    "spotify-web-api-node": "^4.0.0"
+    "sanitize-html": "^2.13.1"
   }
 }
