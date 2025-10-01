@@ -1,6 +1,4 @@
 import SpotifyWebApi from 'spotify-web-api-node';
-import { difference } from 'lodash';
-import pAll from 'p-all';
 
 type PlaylistObjectSimplified = SpotifyApi.PlaylistObjectSimplified;
 type TrackObjectFull = SpotifyApi.TrackObjectFull;
@@ -15,13 +13,15 @@ export class Spotify {
   spotifyApi: SpotifyWebApi;
   scopes: string[];
 
-  constructor() {
+  constructor(
+    clientId: string,
+    clientSecret: string,
+    redirectUri?: string
+  ) {
     const credentials = {
-      clientId: process.env.SPOTIFY_CLIENT_ID,
-      clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-      redirectUri:
-        process.env.SPOTIFY_REDIRECT_URL ??
-        'http://localhost:3000/spotify/auth',
+      clientId,
+      clientSecret,
+      redirectUri: redirectUri ?? 'http://localhost:3000/spotify/auth',
     };
     this.scopes = [
       'user-read-private',
@@ -62,21 +62,34 @@ export class Spotify {
   }
 
   async searchTracks(tracks: TrackDescriptor[]): Promise<TrackObjectFull[]> {
-    const actions = tracks.map((track) => {
-      return async () => {
-        const searchResult = await this.searchTrack(track);
-        return searchResult.length > 0 ? searchResult[0] : null;
-      };
-    });
-    const foundTracks = await pAll(actions, { concurrency: 10 });
-    return foundTracks.filter((track) => track !== null) as TrackObjectFull[];
+    const foundTracks: TrackObjectFull[] = [];
+
+    // Process tracks with basic concurrency control
+    const batchSize = 10;
+    for (let i = 0; i < tracks.length; i += batchSize) {
+      const batch = tracks.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map(async (track) => {
+          try {
+            const searchResult = await this.searchTrack(track);
+            return searchResult.length > 0 ? searchResult[0] : null;
+          } catch (error) {
+            console.error(`Error searching track ${track.artist} - ${track.title}:`, error);
+            return null;
+          }
+        })
+      );
+      foundTracks.push(...batchResults.filter((t) => t !== null) as TrackObjectFull[]);
+    }
+
+    return foundTracks;
   }
 
   async addTracksToPlaylist(playlistName: string, tracks: TrackDescriptor[]) {
     const me = await this.getMe();
     const currentUserId = me.id;
 
-    console.log('Finding user playlists');
+    console.log('Searching tracks on Spotify...');
     const foundTracks: TrackObjectFull[] = await this.searchTracks(tracks);
     const trackUris = foundTracks.map((track) => track.uri);
 
@@ -104,9 +117,9 @@ export class Spotify {
         playlist.id
       );
       const existingUris = currentPlaylistTracks.map((t) => t.track.uri);
-      const newUris = difference(trackUris, existingUris);
+      const newUris = trackUris.filter((uri) => !existingUris.includes(uri));
 
-      console.log(`👷 Adding ${newUris.length} to the playlist`);
+      console.log(`👷 Adding ${newUris.length} new tracks to the playlist`);
 
       if (newUris.length > 0) {
         await this.spotifyApi.addTracksToPlaylist(playlist.id, newUris, {
@@ -124,7 +137,7 @@ export class Spotify {
     let currentOffset = 0;
     let hasMore = true;
     do {
-      console.log('add playlist tracks', currentOffset);
+      console.log('Fetching playlist tracks, offset:', currentOffset);
       const response = await this.spotifyApi.getPlaylistTracks(id, {
         limit,
         offset: currentOffset,
