@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "create playlist from radio3 programs",
   "main": "src/index.js",
+  "type": "module",
   "repository": "http://github.com/axelhzf/radio3-playlist",
   "author": "Axel Hernández Ferrera",
   "license": "MIT",
