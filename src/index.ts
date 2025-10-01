@@ -82,6 +82,8 @@ export default {
           // Get the latest episode (first in the list)
           if (episodes.length > 0) {
             const latestEpisode = episodes[0];
+            if (!latestEpisode) continue;
+
             console.log(`📝 Latest episode: ${latestEpisode.title}`);
             console.log(`📅 Published: ${latestEpisode.pubDate}`);
             console.log(`🎵 Found ${latestEpisode.playlist.length} tracks`);

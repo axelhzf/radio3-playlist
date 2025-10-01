@@ -73,8 +73,8 @@ describe('ivoxFetcher', () => {
       const playlist = extractPlaylistFromContent(content);
 
       expect(playlist).toHaveLength(2);
-      expect(playlist[0].artist).toBe('Tame Impala');
-      expect(playlist[1].artist).toBe('The Beatles');
+      expect(playlist[0]?.artist).toBe('Tame Impala');
+      expect(playlist[1]?.artist).toBe('The Beatles');
     });
 
     it('should handle tracks with special characters in titles', () => {
@@ -86,9 +86,9 @@ describe('ivoxFetcher', () => {
       const playlist = extractPlaylistFromContent(content);
 
       expect(playlist).toHaveLength(3);
-      expect(playlist[0].title).toBe('Song (feat. Someone)');
-      expect(playlist[1].title).toBe('Song [Live Version]');
-      expect(playlist[2].title).toBe("Song's Title");
+      expect(playlist[0]?.title).toBe('Song (feat. Someone)');
+      expect(playlist[1]?.title).toBe('Song [Live Version]');
+      expect(playlist[2]?.title).toBe("Song's Title");
     });
 
     it('should trim whitespace from artist and title', () => {
@@ -107,8 +107,8 @@ describe('ivoxFetcher', () => {
       const playlist = extractPlaylistFromContent(content);
 
       expect(playlist).toHaveLength(2);
-      expect(playlist[0].artist).toBe('MiniÑO');
-      expect(playlist[1].artist).toBe('Djo');
+      expect(playlist[0]?.artist).toBe('MiniÑO');
+      expect(playlist[1]?.artist).toBe('Djo');
     });
 
     it('should not extract lines without the " - " separator', () => {
@@ -121,8 +121,8 @@ describe('ivoxFetcher', () => {
       const playlist = extractPlaylistFromContent(content);
 
       expect(playlist).toHaveLength(2);
-      expect(playlist[0].artist).toBe('Valid Artist');
-      expect(playlist[1].artist).toBe('Another Artist');
+      expect(playlist[0]?.artist).toBe('Valid Artist');
+      expect(playlist[1]?.artist).toBe('Another Artist');
     });
 
     it('should handle complex HTML with nested tags', () => {
@@ -150,8 +150,8 @@ describe('ivoxFetcher', () => {
       const playlist = extractPlaylistFromContent(content);
 
       expect(playlist).toHaveLength(2);
-      expect(playlist[0].title).toBe('Song "Title"');
-      expect(playlist[1].title).toBe("Don't Stop");
+      expect(playlist[0]?.title).toBe('Song "Title"');
+      expect(playlist[1]?.title).toBe("Don't Stop");
     });
   });
 });

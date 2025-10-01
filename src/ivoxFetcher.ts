@@ -71,10 +71,14 @@ export function extractPlaylistFromContent(content: string): Playlist {
 
   let trackMatch;
   while ((trackMatch = trackRegex.exec(decoded)) !== null) {
-    playlist.push({
-      artist: capitalize(trackMatch[1].trim()),
-      title: trackMatch[2].trim(),
-    });
+    const artist = trackMatch[1];
+    const title = trackMatch[2];
+    if (artist && title) {
+      playlist.push({
+        artist: capitalize(artist.trim()),
+        title: title.trim(),
+      });
+    }
   }
   return playlist;
 }
