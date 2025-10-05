@@ -62,9 +62,10 @@ export default {
 
       // Refresh the access token to ensure it's valid
       try {
-        await spotify.refreshAccessToken();
+        await spotify.refreshAccessToken({ SPOTIFY_REFRESH_TOKEN: env.SPOTIFY_REFRESH_TOKEN });
       } catch (error) {
-        console.error('⚠️  Failed to refresh access token, continuing with existing token...');
+        console.error('⚠️  Failed to refresh access token', { error });
+        throw error;
       }
 
       // Process each podcast

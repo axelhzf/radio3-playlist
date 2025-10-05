@@ -40,7 +40,7 @@ export class Spotify {
     });
   }
 
-  async refreshAccessToken(): Promise<string> {
+  async refreshAccessToken(options: { SPOTIFY_REFRESH_TOKEN: string }): Promise<string> {
     console.log('🔄 Refreshing Spotify access token...');
 
     const response = await fetch('https://accounts.spotify.com/api/token', {
@@ -51,11 +51,13 @@ export class Spotify {
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: (this.sdk as any).getAccessToken().refresh_token,
+        refresh_token: options.SPOTIFY_REFRESH_TOKEN,
       }),
     });
 
     if (!response.ok) {
+      const body = await response.json();
+      console.error({ body, status: response.status});
       throw new Error(`Failed to refresh token: ${response.statusText}`);
     }
 
@@ -66,7 +68,7 @@ export class Spotify {
       access_token: data.access_token,
       token_type: 'Bearer',
       expires_in: 3600,
-      refresh_token: data.refresh_token || (this.sdk as any).getAccessToken().refresh_token,
+      refresh_token: data.refresh_token ?? options.SPOTIFY_REFRESH_TOKEN,
     });
 
     console.log('✓ Access token refreshed successfully');
