@@ -45,7 +45,7 @@ export default {
       console.log('SPOTIFY_REFRESH_TOKEN:', env.SPOTIFY_REFRESH_TOKEN ? '✓ Set' : '✗ Missing');
 
       if (!env.SPOTIFY_CLIENT_ID || !env.SPOTIFY_CLIENT_SECRET || !env.SPOTIFY_ACCESS_TOKEN || !env.SPOTIFY_REFRESH_TOKEN) {
-        console.error('❌ Missing required Spotify credentials. Skipping playlist update.');
+        console.error('❌  Missing required Spotify credentials. Skipping playlist update.');
         return;
       }
 
