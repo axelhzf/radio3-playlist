@@ -11,14 +11,17 @@ interface Env {
 
 const PODCASTS = [
   {
+    id: 'turbo3',
     name: 'Turbo3',
     rss: 'https://www.ivoox.com/turbo-3_fg_f157926_filtro_1.xml',
   },
   {
+    id: 'na-na-na',
     name: 'Na na na',
     rss: 'https://www.ivoox.com/na-na-na_fg_f1128042_filtro_1.xml',
   },
   {
+    id: '180-grados',
     name: '180 grados',
     rss: 'http://api.rtve.es/api/programas/22270/audios.rss',
   },
@@ -32,7 +35,21 @@ export default {
   ): Promise<void> {
     console.log('Event cron:', event.cron);
     console.log('Event scheduledTime:', new Date(event.scheduledTime).toISOString());
-    await this.runScheduledTask(env);
+
+    // Determine which podcast to run based on the cron pattern
+    const cronToPodcast: Record<string, typeof PODCASTS[number]> = {
+      '0 9 * * *': PODCASTS[0]!,   // Turbo3
+      '5 9 * * *': PODCASTS[1]!,   // Na na na
+      '10 9 * * *': PODCASTS[2]!,  // 180 grados
+    };
+
+    const podcast = cronToPodcast[event.cron];
+    if (podcast) {
+      console.log(`🎯 Running scheduled task for podcast: ${podcast.name}`);
+      await this.processPodcast(env, podcast);
+    } else {
+      console.log('⚠️ No podcast matched for this cron schedule:', event.cron);
+    }
   },
 
   // Handle HTTP requests - returns latest episodes with parsed tracks
@@ -43,12 +60,36 @@ export default {
   ): Promise<Response> {
     const url = new URL(request.url);
 
-    // Handle /cron route - manually trigger the scheduled task
-    if (url.pathname === '/cron') {
-      try {
-        await this.runScheduledTask(env);
+    // Handle /cron/:podcast_id route - manually trigger task for a specific podcast
+    const cronMatch = url.pathname.match(/^\/cron\/([^/]+)$/);
+    if (cronMatch) {
+      const podcastId = cronMatch[1];
+      const podcast = PODCASTS.find(p => p.id === podcastId);
+
+      if (!podcast) {
         return new Response(
-          JSON.stringify({ success: true, message: 'Scheduled task executed successfully' }),
+          JSON.stringify({
+            success: false,
+            error: `Podcast not found: ${podcastId}`,
+            availablePodcasts: PODCASTS.map(p => ({
+              id: p.id,
+              name: p.name
+            }))
+          }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      try {
+        await this.processPodcast(env, podcast);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: `Scheduled task executed successfully for ${podcast.name}`
+          }),
           {
             headers: { 'Content-Type': 'application/json' },
           }
@@ -57,6 +98,7 @@ export default {
         return new Response(
           JSON.stringify({
             success: false,
+            podcast: podcast.name,
             error: error instanceof Error ? error.message : 'Unknown error',
           }),
           {
@@ -115,10 +157,10 @@ export default {
     }
   },
 
-  // Shared logic for scheduled task - can be called from both scheduled() and fetch()
-  async runScheduledTask(env: Env): Promise<void> {
+  // Process a single podcast - can be called from both scheduled() and fetch()
+  async processPodcast(env: Env, podcast: { id: string; name: string; rss: string }): Promise<void> {
     console.log('========================================');
-    console.log('🚀 Starting scheduled playlist update...');
+    console.log(`🚀 Starting playlist update for ${podcast.name}...`);
     console.log('========================================');
 
     try {
@@ -153,57 +195,58 @@ export default {
         throw error;
       }
 
-      // Process each podcast
-      console.log(`📻 Processing ${PODCASTS.length} podcasts...`);
-      for (const podcast of PODCASTS) {
-        console.log('----------------------------------------');
-        console.log(`📡 Processing podcast: ${podcast.name}`);
-        console.log(`📡 RSS feed: ${podcast.rss}`);
+      // Process the podcast
+      console.log('----------------------------------------');
+      console.log(`📡 Processing podcast: ${podcast.name}`);
+      console.log(`📡 RSS feed: ${podcast.rss}`);
 
-        try {
-          console.log(`⬇️  Fetching episodes from RSS feed...`);
-          const episodes = await fetchEpisodes(podcast.rss);
-          console.log(`✓ Fetched ${episodes.length} episodes`);
+      try {
+        console.log(`⬇️  Fetching episodes from RSS feed...`);
+        const episodes = await fetchEpisodes(podcast.rss);
+        console.log(`✓ Fetched ${episodes.length} episodes`);
 
-          // Get the latest episode (first in the list)
-          if (episodes.length > 0) {
-            const latestEpisode = episodes[0];
-            if (!latestEpisode) continue;
+        // Get the latest episode (first in the list)
+        if (episodes.length > 0) {
+          const latestEpisode = episodes[0];
+          if (!latestEpisode) {
+            console.log(`⚠️  No valid episode found`);
+            return;
+          }
 
-            console.log(`📝 Latest episode: ${latestEpisode.title}`);
-            console.log(`📅 Published: ${latestEpisode.pubDate}`);
-            console.log(`🎵 Found ${latestEpisode.playlist.length} tracks`);
+          console.log(`📝 Latest episode: ${latestEpisode.title}`);
+          console.log(`📅 Published: ${latestEpisode.pubDate}`);
+          console.log(`🎵 Found ${latestEpisode.playlist.length} tracks`);
 
-            if (latestEpisode.playlist.length > 0) {
-              console.log(`🎶 Sample tracks:`, latestEpisode.playlist.slice(0, 3).map(t => `${t.artist} - ${t.title}`).join(', '));
-              console.log(`📤 Adding tracks to Spotify playlist: ${podcast.name}`);
+          if (latestEpisode.playlist.length > 0) {
+            console.log(`🎶 Sample tracks:`, latestEpisode.playlist.slice(0, 3).map(t => `${t.artist} - ${t.title}`).join(', '));
+            console.log(`📤 Adding tracks to Spotify playlist: ${podcast.name}`);
 
-              await spotify.addTracksToPlaylist(
-                podcast.name,
-                latestEpisode.playlist
-              );
-              console.log(`✅ Updated playlist for ${podcast.name}`);
-            } else {
-              console.log(`⚠️  No tracks found in latest episode`);
-            }
+            await spotify.addTracksToPlaylist(
+              podcast.name,
+              latestEpisode.playlist
+            );
+            console.log(`✅ Updated playlist for ${podcast.name}`);
           } else {
-            console.log(`⚠️  No episodes found in feed`);
+            console.log(`⚠️  No tracks found in latest episode`);
           }
-        } catch (error) {
-          console.error(`❌ Error processing ${podcast.name}:`, error);
-          if (error instanceof Error) {
-            console.error(`   Error message: ${error.message}`);
-            console.error(`   Stack trace:`, error.stack);
-          }
+        } else {
+          console.log(`⚠️  No episodes found in feed`);
         }
+      } catch (error) {
+        console.error(`❌ Error processing ${podcast.name}:`, error);
+        if (error instanceof Error) {
+          console.error(`   Error message: ${error.message}`);
+          console.error(`   Stack trace:`, error.stack);
+        }
+        throw error;
       }
 
       console.log('========================================');
-      console.log('✅ Scheduled playlist update completed');
+      console.log(`✅ Playlist update completed for ${podcast.name}`);
       console.log('========================================');
     } catch (error) {
       console.error('========================================');
-      console.error('❌ Error in scheduled task:', error);
+      console.error(`❌ Error in scheduled task for ${podcast.name}:`, error);
       if (error instanceof Error) {
         console.error('   Error message:', error.message);
         console.error('   Stack trace:', error.stack);
