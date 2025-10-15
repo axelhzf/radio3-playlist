@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:api.rtve.es)",
       "Bash(npm run test:run:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

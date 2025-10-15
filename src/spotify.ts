@@ -153,22 +153,7 @@ export class Spotify {
       {
         retries: 3,
         minTimeout: 1000,
-        factor: 2,
-        onFailedAttempt: (error) => {
-          // Check if it's a rate limit or too many requests error
-          const errorMessage = (error as any).message?.toLowerCase() || '';
-          const isTooManyRequests =
-            errorMessage.includes('too many') ||
-            errorMessage.includes('rate limit') ||
-            (error as any)?.status === 429;
-
-          if (isTooManyRequests) {
-            console.log(`⏳ Rate limited, retrying (attempt ${error.attemptNumber}/4)...`);
-          } else {
-            // For non-rate-limit errors, throw immediately without retry
-            throw error;
-          }
-        },
+        factor: 2
       }
     );
   }
