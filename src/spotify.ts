@@ -1,4 +1,6 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
+import pMap from 'p-map';
+import pRetry from 'p-retry';
 
 export type TrackDescriptor = {
   artist: string;
@@ -124,27 +126,51 @@ export class Spotify {
   }
 
   async searchTracks(tracks: TrackDescriptor[]) {
-    const foundTracks: any[] = [];
+    // Process tracks with concurrency control to avoid "Too many subrequests" error
+    // Cloudflare Workers typically limits to 50 subrequests, so we use a smaller concurrency limit
+    const results = await pMap(
+      tracks,
+      async (track) => {
+        try {
+          const searchResult = await this.searchTrackWithRetry(track);
+          return searchResult.length > 0 ? searchResult[0] : null;
+        } catch (error) {
+          console.error(`Error searching track ${track.artist} - ${track.title}:`, error);
+          return null;
+        }
+      },
+      { concurrency: 5 }
+    );
 
-    // Process tracks with basic concurrency control
-    const batchSize = 10;
-    for (let i = 0; i < tracks.length; i += batchSize) {
-      const batch = tracks.slice(i, i + batchSize);
-      const batchResults = await Promise.all(
-        batch.map(async (track) => {
-          try {
-            const searchResult = await this.searchTrack(track);
-            return searchResult.length > 0 ? searchResult[0] : null;
-          } catch (error) {
-            console.error(`Error searching track ${track.artist} - ${track.title}:`, error);
-            return null;
+    return results.filter((t) => t !== null);
+  }
+
+  private async searchTrackWithRetry(track: TrackDescriptor): Promise<any[]> {
+    return await pRetry(
+      async () => {
+        return await this.searchTrack(track);
+      },
+      {
+        retries: 3,
+        minTimeout: 1000,
+        factor: 2,
+        onFailedAttempt: (error) => {
+          // Check if it's a rate limit or too many requests error
+          const errorMessage = (error as any).message?.toLowerCase() || '';
+          const isTooManyRequests =
+            errorMessage.includes('too many') ||
+            errorMessage.includes('rate limit') ||
+            (error as any)?.status === 429;
+
+          if (isTooManyRequests) {
+            console.log(`⏳ Rate limited, retrying (attempt ${error.attemptNumber}/4)...`);
+          } else {
+            // For non-rate-limit errors, throw immediately without retry
+            throw error;
           }
-        })
-      );
-      foundTracks.push(...batchResults.filter((t) => t !== null));
-    }
-
-    return foundTracks;
+        },
+      }
+    );
   }
 
   async addTracksToPlaylist(playlistName: string, tracks: TrackDescriptor[]) {

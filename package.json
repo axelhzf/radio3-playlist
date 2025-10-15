@@ -30,6 +30,8 @@
   "dependencies": {
     "@spotify/web-api-ts-sdk": "^1.2.0",
     "fast-xml-parser": "^5.2.5",
+    "p-map": "^7.0.3",
+    "p-retry": "^7.1.0",
     "sanitize-html": "^2.13.1"
   }
 }

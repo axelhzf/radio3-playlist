@@ -30,10 +30,95 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
-    console.log('========================================');
-    console.log('🚀 Starting scheduled playlist update...');
     console.log('Event cron:', event.cron);
     console.log('Event scheduledTime:', new Date(event.scheduledTime).toISOString());
+    await this.runScheduledTask(env);
+  },
+
+  // Handle HTTP requests - returns latest episodes with parsed tracks
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext
+  ): Promise<Response> {
+    const url = new URL(request.url);
+
+    // Handle /cron route - manually trigger the scheduled task
+    if (url.pathname === '/cron') {
+      try {
+        await this.runScheduledTask(env);
+        return new Response(
+          JSON.stringify({ success: true, message: 'Scheduled task executed successfully' }),
+          {
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
+    // Default route - return latest episodes info
+    try {
+      const results = await Promise.all(
+        PODCASTS.map(async (podcast) => {
+          try {
+            const episodes = await fetchEpisodes(podcast.rss);
+            const latestEpisode = episodes.length > 0 ? episodes[0] : null;
+
+            return {
+              podcast: podcast.name,
+              rss: podcast.rss,
+              latestEpisode: latestEpisode
+                ? {
+                    title: latestEpisode.title,
+                    pubDate: latestEpisode.pubDate,
+                    audio: latestEpisode.audio,
+                    tracksCount: latestEpisode.playlist.length,
+                    tracks: latestEpisode.playlist,
+                  }
+                : null,
+            };
+          } catch (error) {
+            return {
+              podcast: podcast.name,
+              rss: podcast.rss,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              latestEpisode: null,
+            };
+          }
+        })
+      );
+
+      return new Response(JSON.stringify(results, null, 2), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  },
+
+  // Shared logic for scheduled task - can be called from both scheduled() and fetch()
+  async runScheduledTask(env: Env): Promise<void> {
+    console.log('========================================');
+    console.log('🚀 Starting scheduled playlist update...');
     console.log('========================================');
 
     try {
@@ -125,59 +210,6 @@ export default {
       }
       console.error('========================================');
       throw error;
-    }
-  },
-
-  // Handle HTTP requests - returns latest episodes with parsed tracks
-  async fetch(
-    request: Request,
-    env: Env,
-    ctx: ExecutionContext
-  ): Promise<Response> {
-    try {
-      const results = await Promise.all(
-        PODCASTS.map(async (podcast) => {
-          try {
-            const episodes = await fetchEpisodes(podcast.rss);
-            const latestEpisode = episodes.length > 0 ? episodes[0] : null;
-
-            return {
-              podcast: podcast.name,
-              rss: podcast.rss,
-              latestEpisode: latestEpisode
-                ? {
-                    title: latestEpisode.title,
-                    pubDate: latestEpisode.pubDate,
-                    audio: latestEpisode.audio,
-                    tracksCount: latestEpisode.playlist.length,
-                    tracks: latestEpisode.playlist,
-                  }
-                : null,
-            };
-          } catch (error) {
-            return {
-              podcast: podcast.name,
-              rss: podcast.rss,
-              error: error instanceof Error ? error.message : 'Unknown error',
-              latestEpisode: null,
-            };
-          }
-        })
-      );
-
-      return new Response(JSON.stringify(results, null, 2), {
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
     }
   },
 };
