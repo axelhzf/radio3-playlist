@@ -11,7 +11,10 @@
       "Bash(git rm:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nMigrate from Cloudflare Workers to Vercel Functions with structured logging\n\n- Replace Cloudflare Worker export format with Vercel Function handler\n- Add structured JSON logging system with contextual data and performance metrics\n- Remove all emoji characters from log messages for production readiness\n- Create vercel.json with cron job configuration for three podcast feeds\n- Update package.json scripts from wrangler to vercel commands\n- Remove Cloudflare-specific dependencies (@cloudflare/workers-types, wrangler)\n- Add environment variable helper to read from process.env\n- Include detailed debugging context (request info, timings, episode metadata)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nConsolidate three separate cron jobs into a single cron endpoint\n\n- Add new /cron route that processes all podcasts sequentially\n- Process Turbo3, Na na na, and 180 grados in a single job execution\n- Add comprehensive error handling and logging for each podcast\n- Return detailed results with success/failure counts and durations\n- Update vercel.json to use single cron schedule at 9:00 AM UTC\n- Keep individual /cron/:podcast_id routes for manual triggers\n- Return HTTP 207 Multi-Status if some podcasts fail, 200 if all succeed\n\nBenefits:\n- Simpler configuration (1 cron instead of 3)\n- Sequential processing prevents resource contention\n- Better observability with structured logging\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
