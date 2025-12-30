@@ -1,9 +1,7 @@
 # Ignore everything
 *
 
-# Except the api folder
-!api/
-!api/**/*
-
-# Also keep vercel.json for configuration
+# Only include the built dist folder and vercel.json
+!dist/
+!dist/**/*
 !vercel.json
