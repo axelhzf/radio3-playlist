@@ -4,7 +4,12 @@
       "WebFetch(domain:api.rtve.es)",
       "Bash(npm run test:run:*)",
       "Bash(node:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run typecheck)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMigrate from Cloudflare Workers to Vercel Functions with structured logging\n\n- Replace Cloudflare Worker export format with Vercel Function handler\n- Add structured JSON logging system with contextual data and performance metrics\n- Remove all emoji characters from log messages for production readiness\n- Create vercel.json with cron job configuration for three podcast feeds\n- Update package.json scripts from wrangler to vercel commands\n- Remove Cloudflare-specific dependencies (@cloudflare/workers-types, wrangler)\n- Add environment variable helper to read from process.env\n- Include detailed debugging context (request info, timings, episode metadata)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

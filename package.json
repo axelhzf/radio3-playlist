@@ -9,9 +9,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "worker:dev": "wrangler dev",
-    "worker:deploy": "wrangler deploy",
-    "worker:tail": "wrangler tail",
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -19,13 +18,11 @@
     "get-tokens": "node --env-file=.env --experimental-strip-types scripts/get-spotify-tokens.ts"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241127.0",
     "@types/node": "^24.6.1",
     "@types/sanitize-html": "^1.27.0",
     "prettier": "^2.1.1",
     "typescript": "^5.9.3",
-    "vitest": "^2.1.8",
-    "wrangler": "^4.40.3"
+    "vitest": "^2.1.8"
   },
   "dependencies": {
     "@spotify/web-api-ts-sdk": "^1.2.0",

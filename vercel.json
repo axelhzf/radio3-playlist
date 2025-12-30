@@ -1,0 +1,21 @@
+{
+  "crons": [
+    {
+      "path": "/cron/turbo3",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/cron/na-na-na",
+      "schedule": "5 9 * * *"
+    },
+    {
+      "path": "/cron/180-grados",
+      "schedule": "10 9 * * *"
+    }
+  ],
+  "functions": {
+    "src/index.ts": {
+      "maxDuration": 300
+    }
+  }
+}
