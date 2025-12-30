@@ -176,6 +176,77 @@ export default async function handler(request: Request): Promise<Response> {
     searchParams: Object.fromEntries(url.searchParams),
   });
 
+  // Handle /cron route - process all podcasts sequentially
+  if (url.pathname === '/cron') {
+    logger.info('Processing all podcasts via cron job', {
+      podcastCount: PODCASTS.length,
+    });
+
+    const results = [];
+    const overallStartTime = Date.now();
+
+    for (const podcast of PODCASTS) {
+      try {
+        logger.info('Starting podcast processing', {
+          podcastId: podcast.id,
+          podcastName: podcast.name,
+        });
+
+        const startTime = Date.now();
+        await processPodcast(env, podcast);
+        const duration = Date.now() - startTime;
+
+        results.push({
+          podcast: podcast.name,
+          success: true,
+          durationMs: duration,
+        });
+
+        logger.info('Podcast processing completed', {
+          podcastId: podcast.id,
+          durationMs: duration,
+        });
+      } catch (error) {
+        results.push({
+          podcast: podcast.name,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+
+        logger.error('Podcast processing failed', {
+          podcastId: podcast.id,
+          podcastName: podcast.name,
+        }, error instanceof Error ? error : undefined);
+      }
+    }
+
+    const overallDuration = Date.now() - overallStartTime;
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+
+    logger.info('All podcasts processed', {
+      totalPodcasts: PODCASTS.length,
+      successCount,
+      failureCount,
+      totalDurationMs: overallDuration,
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: failureCount === 0,
+        totalPodcasts: PODCASTS.length,
+        successCount,
+        failureCount,
+        totalDurationMs: overallDuration,
+        results,
+      }),
+      {
+        status: failureCount === 0 ? 200 : 207, // 207 Multi-Status if some failed
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
   // Handle /cron/:podcast_id route - manually trigger task for a specific podcast
   const cronMatch = url.pathname.match(/^\/cron\/([^/]+)$/);
   if (cronMatch) {
