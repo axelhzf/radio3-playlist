@@ -1,7 +1,9 @@
-# Don't ignore source files - Vercel needs them to build
-# Only ignore files that shouldn't be deployed
-node_modules
-.git
-.env
-*.test.ts
-vitest.config.ts
+# Ignore everything
+*
+
+# Except the api folder
+!api/
+!api/**/*
+
+# Also keep vercel.json for configuration
+!vercel.json

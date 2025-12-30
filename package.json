@@ -9,8 +9,6 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "tsdown",
-    "vercel-build": "tsdown",
     "dev": "vercel dev",
     "deploy": "vercel --prod",
     "typecheck": "tsc --noEmit",
@@ -23,7 +21,6 @@
     "@types/node": "^24.6.1",
     "@types/sanitize-html": "^1.27.0",
     "prettier": "^2.1.1",
-    "tsdown": "^0.18.3",
     "typescript": "^5.9.3",
     "vitest": "^2.1.8"
   },

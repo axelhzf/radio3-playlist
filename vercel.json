@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "crons": [
     {
       "path": "/cron",
@@ -8,7 +6,7 @@
     }
   ],
   "functions": {
-    "api/index.mjs": {
+    "api/index.ts": {
       "maxDuration": 300
     }
   }

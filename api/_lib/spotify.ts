@@ -1,6 +1,22 @@
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
-import pMap from 'p-map';
-import pRetry from 'p-retry';
+
+// Use dynamic imports for ESM-only packages to avoid CJS/ESM compatibility issues
+const pMap = async <T, R>(
+  iterable: Iterable<T>,
+  mapper: (item: T) => Promise<R>,
+  options?: { concurrency?: number }
+): Promise<R[]> => {
+  const { default: pMapFn } = await import('p-map');
+  return pMapFn(iterable, mapper, options);
+};
+
+const pRetry = async <T>(
+  fn: () => Promise<T>,
+  options?: { retries?: number; minTimeout?: number; factor?: number }
+): Promise<T> => {
+  const { default: pRetryFn } = await import('p-retry');
+  return pRetryFn(fn, options);
+};
 
 export type TrackDescriptor = {
   artist: string;
