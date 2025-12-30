@@ -1,7 +1,7 @@
-# Ignore everything
-*
-
-# Only include the built dist folder and vercel.json
-!dist/
-!dist/**/*
-!vercel.json
+# Don't ignore source files - Vercel needs them to build
+# Only ignore files that shouldn't be deployed
+node_modules
+.git
+.env
+*.test.ts
+vitest.config.ts
