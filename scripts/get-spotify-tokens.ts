@@ -1,4 +1,4 @@
-import { Spotify } from '../src/spotify.ts';
+import { Spotify } from '../lib/spotify';
 import * as readline from 'readline';
 
 const rl = readline.createInterface({

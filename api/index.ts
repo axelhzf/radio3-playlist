@@ -1,6 +1,6 @@
-import { fetchEpisodes } from './ivoxFetcher';
-import { Spotify } from './spotify';
-import { createLogger } from './logger';
+import { fetchEpisodes } from '../lib/ivoxFetcher';
+import { Spotify } from '../lib/spotify';
+import { createLogger } from '../lib/logger';
 
 const logger = createLogger();
 

@@ -4,7 +4,7 @@
     "lib": ["ES2022"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["@cloudflare/workers-types", "vitest/globals"],
+    "types": ["vitest/globals"],
 
     /* Strict Type Checking */
     "strict": true,
@@ -28,7 +28,8 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/**/*",
+    "api/**/*",
+    "lib/**/*",
     "scripts/**/*"
   ],
   "exclude": [
