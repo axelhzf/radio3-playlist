@@ -9,5 +9,16 @@
     "api/index.ts": {
       "maxDuration": 300
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "status": 404,
+      "dest": "/api/index.ts"
+    }
+  ]
 }
