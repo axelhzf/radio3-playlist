@@ -1,6 +1,6 @@
-import { fetchEpisodes } from './_lib/ivoxFetcher.ts';
-import { logger } from './_lib/logger.ts';
-import { getPodcasts } from './_lib/podcasts.ts';
+import { fetchEpisodes } from './_lib/ivoxFetcher.js';
+import { logger } from './_lib/logger.js';
+import { getPodcasts } from './_lib/podcasts.js';
 
 export async function GET(request: Request): Promise<Response> {
   const podcasts = getPodcasts();

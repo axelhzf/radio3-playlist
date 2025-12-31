@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractPlaylistFromContent } from './ivoxFetcher.ts';
+import { extractPlaylistFromContent } from './ivoxFetcher.js';
 
 describe('ivoxFetcher', () => {
   describe('extractPlaylistFromContent', () => {
@@ -54,7 +54,8 @@ describe('ivoxFetcher', () => {
     });
 
     it('should handle HTML encoded entities', () => {
-      const content = '<p>THE VELVET UNDERGROUND - Rock &amp; Roll</p><p>AC/DC - Back In Black</p>';
+      const content =
+        '<p>THE VELVET UNDERGROUND - Rock &amp; Roll</p><p>AC/DC - Back In Black</p>';
       const playlist = extractPlaylistFromContent(content);
 
       expect(playlist).toHaveLength(2);
@@ -69,7 +70,8 @@ describe('ivoxFetcher', () => {
     });
 
     it('should capitalize artist names correctly', () => {
-      const content = '<p>tame impala - Dracula</p><p>the beatles - Hey Jude</p>';
+      const content =
+        '<p>tame impala - Dracula</p><p>the beatles - Hey Jude</p>';
       const playlist = extractPlaylistFromContent(content);
 
       expect(playlist).toHaveLength(2);

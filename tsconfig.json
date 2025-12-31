@@ -15,7 +15,6 @@
     "exactOptionalPropertyTypes": false,
 
     /* Module Resolution */
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "allowJs": true,
     "esModuleInterop": true,
@@ -28,11 +27,6 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": [
-    "api/**/*",
-    "scripts/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["api/**/*", "scripts/**/*"],
+  "exclude": ["node_modules"]
 }

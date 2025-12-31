@@ -1,7 +1,7 @@
-import { fetchEpisodes } from './_lib/ivoxFetcher.ts';
-import { Spotify } from './_lib/spotify.ts';
-import { createLogger } from './_lib/logger.ts';
-import { getPodcasts } from './_lib/podcasts.ts';
+import { fetchEpisodes } from './_lib/ivoxFetcher.js';
+import { Spotify } from './_lib/spotify.js';
+import { createLogger } from './_lib/logger.js';
+import { getPodcasts } from './_lib/podcasts.js';
 
 const logger = createLogger();
 
