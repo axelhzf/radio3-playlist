@@ -6,7 +6,7 @@
       "schedule": "0 9 * * *"
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/$1" }],
   "functions": {
     "api/cron.ts": {
       "maxDuration": 300
