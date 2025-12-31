@@ -9,7 +9,6 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "vercel dev",
     "deploy": "vercel --prod",
     "typecheck": "tsc --noEmit",
     "test": "vitest",

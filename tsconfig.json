@@ -3,7 +3,7 @@
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "types": ["vitest/globals"],
 
     /* Strict Type Checking */
@@ -15,6 +15,7 @@
     "exactOptionalPropertyTypes": false,
 
     /* Module Resolution */
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "allowJs": true,
     "esModuleInterop": true,

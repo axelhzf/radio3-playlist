@@ -6,3 +6,6 @@ yarn-error.log
 dist
 .next
 .wrangler/
+
+.vercel
+.env*.local

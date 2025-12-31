@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractPlaylistFromContent } from './ivoxFetcher';
+import { extractPlaylistFromContent } from './ivoxFetcher.ts';
 
 describe('ivoxFetcher', () => {
   describe('extractPlaylistFromContent', () => {

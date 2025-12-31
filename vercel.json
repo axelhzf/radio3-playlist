@@ -6,7 +6,7 @@
     }
   ],
   "functions": {
-    "api/index.ts": {
+    "api/cron.ts": {
       "maxDuration": 300
     }
   }
